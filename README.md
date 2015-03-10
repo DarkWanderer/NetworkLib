@@ -1,8 +1,6 @@
 ### NetworkLib ###
 Simple thread-safe network client/server built on top of boost::asio
 
-This is a repository for Multiorb, a project aiming to bring multiplayer to Orbiter
-
 ### Setting up for compilation ###
 
 This project requires an environment variable:
