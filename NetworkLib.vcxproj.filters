@@ -3,6 +3,7 @@
   <ItemGroup>
     <ClCompile Include="NetworkClient.cpp" />
     <ClCompile Include="NetworkServer.cpp" />
+    <ClCompile Include="Statistics.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NetworkClient.h" />
@@ -11,5 +12,6 @@
     <ClInclude Include="NetworkStatistics.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="LockedQueue.h" />
+    <ClInclude Include="Statistics.h" />
   </ItemGroup>
 </Project>

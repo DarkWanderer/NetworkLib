@@ -1,15 +1,11 @@
-#define _WIN32_WINNT 0x0501
-#define WIN32_LEAN_AND_MEAN
-#include <boost/bind.hpp>
-
 #include "NetworkServer.h"
 #include "Log.h"
 
 namespace NetworkLib {
 	NetworkServer::NetworkServer(unsigned short local_port) :
 		socket(io_service, udp::endpoint(udp::v4(), local_port)),
-		nextClientID(0L),
-		service_thread(std::bind(&NetworkServer::run_service, this))
+		service_thread(&NetworkServer::run_service, this),
+		nextClientID(0L)
 	{
 		Log::Info("Starting server on port ", local_port);
 	};
@@ -22,20 +18,43 @@ namespace NetworkLib {
 
 	void NetworkServer::start_receive()
 	{
-		socket.async_receive_from(boost::asio::buffer(recv_buffer), remote_endpoint,
-			boost::bind(&NetworkServer::handle_receive, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+		socket.async_receive_from(asio::buffer(recv_buffer), remote_endpoint,
+			[this](std::error_code ec, std::size_t bytes_recvd){ this->handle_receive(ec, bytes_recvd); });
 	}
 
-	void NetworkServer::handle_receive(const boost::system::error_code& error, std::size_t bytes_transferred)
+	void NetworkServer::on_client_disconnected(int32_t id)
+	{
+		for (auto& handler : clientDisconnectedHandlers)
+			if (handler)
+				handler(id);
+	}
+
+	void NetworkServer::handle_remote_error(const std::error_code error_code, const udp::endpoint remote_endpoint)
+	{
+		bool found = false;
+		int32_t id;
+		for (const auto& client : clients)
+			if (client.second == remote_endpoint) {
+				found = true;
+				id = client.first;
+				break;
+			}
+		if (found == false)
+			return;
+
+		clients.erase(id);
+		on_client_disconnected(id);
+	}
+
+	void NetworkServer::handle_receive(const std::error_code& error, std::size_t bytes_transferred)
 	{
 		if (!error)
 		{
 			try {
-				auto message = ClientMessage(std::string(recv_buffer.data(), recv_buffer.data() + bytes_transferred), get_client_id(remote_endpoint));
+				auto message = ClientMessage(std::string(recv_buffer.data(), recv_buffer.data() + bytes_transferred), get_or_create_client_id(remote_endpoint));
 				if (!message.first.empty())
 					incomingMessages.push(message);
-				Statistics.AddReceivedBytes(bytes_transferred);
-				Statistics.AddReceivedMessage();
+				statistics.RegisterReceivedMessage(bytes_transferred);
 			}
 			catch (std::exception ex) {
 				Log::Error("handle_receive: Error parsing incoming message:", ex.what());
@@ -46,7 +65,8 @@ namespace NetworkLib {
 		}
 		else
 		{
-			Log::Error("handle_receive: error: ", error.message());
+			Log::Error("handle_receive: error: ", error.message(), " while receiving from address ", remote_endpoint);
+			handle_remote_error(error, remote_endpoint);
 		}
 
 		start_receive();
@@ -54,9 +74,8 @@ namespace NetworkLib {
 
 	void NetworkServer::send(const std::string& message, udp::endpoint target_endpoint)
 	{
-		socket.send_to(boost::asio::buffer(message), target_endpoint);
-		Statistics.AddSentBytes(message.size());
-		Statistics.AddSentMessage();
+		socket.send_to(asio::buffer(message), target_endpoint);
+		statistics.RegisterSentMessage(message.size());
 	}
 
 	void NetworkServer::run_service()
@@ -76,38 +95,38 @@ namespace NetworkLib {
 		Log::Debug("Server network thread stopped");
 	};
 
-	unsigned long long NetworkServer::get_client_id(udp::endpoint endpoint)
+	int32_t NetworkServer::get_or_create_client_id(udp::endpoint endpoint)
 	{
-		auto cit = clients.right.find(endpoint);
-		if (cit != clients.right.end())
-			return (*cit).second;
+		for (const auto& client : clients)
+			if (client.second == endpoint)
+				return client.first;
 
-		nextClientID++;
-		clients.insert(Client(nextClientID, endpoint));
-		return nextClientID;
+		auto id = ++nextClientID;
+		clients.insert(Client(id, endpoint));
+		return id;
 	};
 
-	void NetworkServer::SendToClient(const std::string& message, unsigned long long clientID)
+	void NetworkServer::SendToClient(const std::string& message, uint32_t clientID)
 	{
 		try {
-			send(message, clients.left.at(clientID));
+			send(message, clients.at(clientID));
 		}
 		catch (std::out_of_range) {
 			Log::Error(__FUNCTION__": Unknown client ID ", clientID);
 		}
 	};
 
-	void NetworkServer::SendToAllExcept(const std::string& message, unsigned long long clientID)
+	void NetworkServer::SendToAllExcept(const std::string& message, uint32_t clientID)
 	{
 		for (auto client : clients)
-			if (client.left != clientID)
-				send(message, client.right);
+			if (client.first != clientID)
+				send(message, client.second);
 	};
 
 	void NetworkServer::SendToAll(const std::string& message)
 	{
 		for (auto client : clients)
-			send(message, client.right);
+			send(message, client.second);
 	};
 
 	ClientMessage NetworkServer::PopMessage() {
