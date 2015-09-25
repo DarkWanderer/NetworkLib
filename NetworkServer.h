@@ -12,8 +12,6 @@
 #include <map>
 #include <thread>
 #include <atomic>
-#include <cstdint>
-#include "Statistics.h"
 
 using asio::ip::udp;
 

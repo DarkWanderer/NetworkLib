@@ -80,7 +80,6 @@
     <ClInclude Include="Log.h" />
     <ClInclude Include="NetworkClient.h" />
     <ClInclude Include="NetworkServer.h" />
-    <ClInclude Include="NetworkStatistics.h" />
     <ClInclude Include="Statistics.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

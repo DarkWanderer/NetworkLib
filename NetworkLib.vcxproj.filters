@@ -9,7 +9,6 @@
     <ClInclude Include="NetworkClient.h" />
     <ClInclude Include="NetworkServer.h" />
     <ClInclude Include="Constants.h" />
-    <ClInclude Include="NetworkStatistics.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="LockedQueue.h" />
     <ClInclude Include="Statistics.h" />

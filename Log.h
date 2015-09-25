@@ -1,7 +1,3 @@
-#include <sstream>
-#include <vector>
-#include <memory>
-
 namespace Log {
 	// Empty function prototypes to be replaced with your implementations
 	template<typename... T> inline void Debug(T... args) {
