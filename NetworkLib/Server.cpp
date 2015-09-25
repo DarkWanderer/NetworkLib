@@ -1,4 +1,3 @@
-#include "targetver.h"
 #include "Server.h"
 #include "Log.h"
 
@@ -128,6 +127,19 @@ namespace NetworkLib {
 	{
 		for (auto client : clients)
 			send(message, client.second);
+	}
+
+	size_t Server::GetClientCount()
+	{
+		return clients.size();
+	}
+
+	uint32_t Server::GetClientIdByIndex(size_t index)
+	{
+		auto it = clients.begin();
+		for (int i = 0; i < index; i++)
+			++it;
+		return it->first;
 	};
 
 	ClientMessage Server::PopMessage() {

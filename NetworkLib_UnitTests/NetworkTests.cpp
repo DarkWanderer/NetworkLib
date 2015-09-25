@@ -2,6 +2,7 @@
 #include "CppUnitTest.h"
 #include <memory>
 #include <thread>
+#include <vector>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 namespace chrono = std::chrono;
@@ -15,11 +16,15 @@ namespace Multiorb_UnitTests
 			return NetworkLib::Factory::CreateServer(12345);
 		};
 
-		static std::unique_ptr<NetworkLib::IClient> CreateClient() {
-			return NetworkLib::Factory::CreateClient("localhost", 12345, 23456);
+		static std::unique_ptr<NetworkLib::IClient> CreateClient()
+		{
+			return NetworkLib::Factory::CreateClient("localhost", 12345, 0);
 		};
 
-		const chrono::milliseconds sleepDuration = chrono::milliseconds(5);
+		static void Sleep()
+		{
+			std::this_thread::sleep_for(chrono::milliseconds(5));
+		}
 
 	public:
 		TEST_METHOD(ServerConstructorShouldWork)
@@ -33,17 +38,47 @@ namespace Multiorb_UnitTests
 			Assert::IsFalse(server->HasMessages());
 		};
 
-		TEST_METHOD(NetworkClientConstructorShouldWork)
+		TEST_METHOD(ServerShouldHaveZeroClientsWhenCreated)
+		{
+			auto server = CreateServer();
+			Assert::IsFalse(server->GetClientCount() > 0);
+		};
+
+
+		TEST_METHOD(ClientConstructorShouldWork)
+		{
+			auto client = CreateClient();
+		};
+
+		TEST_METHOD(ClientShouldHaveNoMessagesWhenCreated)
 		{
 			auto client = CreateClient();
 			Assert::IsFalse(client->HasMessages());
 		};
 
-		TEST_METHOD(NetworkClientShouldHaveNoMessagesWhenCreated)
+		TEST_METHOD(ServerShouldCountMultipleClients)
 		{
-			auto client = CreateClient();
-			Assert::IsFalse(client->HasMessages());
-		};
+			auto server = CreateServer();
+			std::vector<std::unique_ptr<NetworkLib::IClient>> clients;
+			for (int i = 0; i < 5; i++)
+				clients.emplace_back(CreateClient());
+			Sleep();
+			Assert::IsTrue(server->GetClientCount() == clients.size());
+		}
+
+		//TEST_METHOD(ClientShouldDisconnectFromServerWhenDestroyed)
+		//{
+		//	auto server = CreateServer();
+		//	{
+		//		std::vector<std::unique_ptr<NetworkLib::IClient>> clients;
+		//		for (int i = 0; i < 5; i++)
+		//			clients.emplace_back(CreateClient());
+		//		Sleep();
+		//		Assert::IsTrue(server->GetClientCount() == clients.size());
+		//	}
+		//	Sleep();
+		//	Assert::IsTrue(server->GetClientCount() == 0);
+		//}
 
 		TEST_METHOD(SendMessageFromClientToServerShouldProduceSameMessage)
 		{
@@ -54,7 +89,7 @@ namespace Multiorb_UnitTests
 			// Send client->server
 			client->Send(message);
 
-			std::this_thread::sleep_for(sleepDuration);
+			Sleep();
 
 			Assert::IsTrue(server->HasMessages());
 			Assert::IsFalse(client->HasMessages());
@@ -74,12 +109,13 @@ namespace Multiorb_UnitTests
 
 			// Sleep for a bit so that server has time to 
 			// receive client announcement message
-			std::this_thread::sleep_for(sleepDuration);
-			
+			Sleep();
+
 			// Send from server to client
 			// TODO: get client ID from server itself
-			server->SendToClient(message, 1);
-			std::this_thread::sleep_for(sleepDuration);
+			Assert::IsTrue(server->GetClientCount() == 1);
+			server->SendToClient(message, server->GetClientIdByIndex(0));
+			Sleep();
 
 			Assert::IsFalse(server->HasMessages());
 

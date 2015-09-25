@@ -1,4 +1,3 @@
-#include "targetver.h"
 #include "Client.h"
 #include "Log.h"
 
@@ -10,7 +9,7 @@ namespace NetworkLib {
 		udp::resolver resolver(io_service);
 		udp::resolver::query query(udp::v4(), host, std::to_string(server_port));
 		server_endpoint = *resolver.resolve(query);
-		Send("");
+		Client::Send("");
 	}
 
 	Client::~Client()

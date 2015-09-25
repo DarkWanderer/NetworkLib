@@ -26,12 +26,15 @@ namespace NetworkLib {
 		bool HasMessages() override;
 		ClientMessage PopMessage() override;
 
-		void SendToClient(const std::string& message, uint32_t clientID);
+		void SendToClient(const std::string& message, uint32_t clientID) override;
 		void SendToAllExcept(const std::string& message, uint32_t clientID);
 		void SendToAll(const std::string& message);
 
+		size_t GetClientCount() override;
+		uint32_t GetClientIdByIndex(size_t index) override;
+
 		const Statistics& GetStatistics() const { return statistics; };
-		std::vector<std::function<void(int32_t)>> clientDisconnectedHandlers;
+		std::vector<std::function<void(uint32_t)>> clientDisconnectedHandlers;
 	private:
 		// Network send/receive stuff
 		asio::io_service io_service;
