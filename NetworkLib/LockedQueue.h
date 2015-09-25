@@ -1,3 +1,4 @@
+#pragma once
 #ifndef NETWORKLIB_LOCKEDQUEUE
 #define NETWORKLIB_LOCKEDQUEUE
 #include <mutex>

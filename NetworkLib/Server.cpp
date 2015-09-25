@@ -1,36 +1,36 @@
 #include "targetver.h"
-#include "NetworkServer.h"
+#include "Server.h"
 #include "Log.h"
 
 namespace NetworkLib {
-	NetworkServer::NetworkServer(unsigned short local_port) :
+	Server::Server(unsigned short local_port) :
 		socket(io_service, udp::endpoint(udp::v4(), local_port)),
-		service_thread(&NetworkServer::run_service, this),
+		service_thread(&Server::run_service, this),
 		nextClientID(0L)
 	{
 		Log::Info("Starting server on port ", local_port);
 	};
 
-	NetworkServer::~NetworkServer()
+	Server::~Server()
 	{
 		io_service.stop();
 		service_thread.join();
 	}
 
-	void NetworkServer::start_receive()
+	void Server::start_receive()
 	{
 		socket.async_receive_from(asio::buffer(recv_buffer), remote_endpoint,
 			[this](std::error_code ec, std::size_t bytes_recvd){ this->handle_receive(ec, bytes_recvd); });
 	}
 
-	void NetworkServer::on_client_disconnected(int32_t id)
+	void Server::on_client_disconnected(int32_t id)
 	{
 		for (auto& handler : clientDisconnectedHandlers)
 			if (handler)
 				handler(id);
 	}
 
-	void NetworkServer::handle_remote_error(const std::error_code error_code, const udp::endpoint remote_endpoint)
+	void Server::handle_remote_error(const std::error_code error_code, const udp::endpoint remote_endpoint)
 	{
 		bool found = false;
 		int32_t id;
@@ -47,7 +47,7 @@ namespace NetworkLib {
 		on_client_disconnected(id);
 	}
 
-	void NetworkServer::handle_receive(const std::error_code& error, std::size_t bytes_transferred)
+	void Server::handle_receive(const std::error_code& error, std::size_t bytes_transferred)
 	{
 		if (!error)
 		{
@@ -73,13 +73,13 @@ namespace NetworkLib {
 		start_receive();
 	}
 
-	void NetworkServer::send(const std::string& message, udp::endpoint target_endpoint)
+	void Server::send(const std::string& message, udp::endpoint target_endpoint)
 	{
 		socket.send_to(asio::buffer(message), target_endpoint);
 		statistics.RegisterSentMessage(message.size());
 	}
 
-	void NetworkServer::run_service()
+	void Server::run_service()
 	{
 		start_receive();
 		while (!io_service.stopped()){
@@ -87,16 +87,16 @@ namespace NetworkLib {
 				io_service.run();
 			}
 			catch (const std::exception& e) {
-				Log::Error("NetworkServer: Network exception: ", e.what());
+				Log::Error("Server: Network exception: ", e.what());
 			}
 			catch (...) {
-				Log::Error("NetworkServer: Network exception: unknown");
+				Log::Error("Server: Network exception: unknown");
 			}
 		}
 		Log::Debug("Server network thread stopped");
 	};
 
-	int32_t NetworkServer::get_or_create_client_id(udp::endpoint endpoint)
+	int32_t Server::get_or_create_client_id(udp::endpoint endpoint)
 	{
 		for (const auto& client : clients)
 			if (client.second == endpoint)
@@ -107,7 +107,7 @@ namespace NetworkLib {
 		return id;
 	};
 
-	void NetworkServer::SendToClient(const std::string& message, uint32_t clientID)
+	void Server::SendToClient(const std::string& message, uint32_t clientID)
 	{
 		try {
 			send(message, clients.at(clientID));
@@ -117,24 +117,24 @@ namespace NetworkLib {
 		}
 	};
 
-	void NetworkServer::SendToAllExcept(const std::string& message, uint32_t clientID)
+	void Server::SendToAllExcept(const std::string& message, uint32_t clientID)
 	{
 		for (auto client : clients)
 			if (client.first != clientID)
 				send(message, client.second);
 	};
 
-	void NetworkServer::SendToAll(const std::string& message)
+	void Server::SendToAll(const std::string& message)
 	{
 		for (auto client : clients)
 			send(message, client.second);
 	};
 
-	ClientMessage NetworkServer::PopMessage() {
+	ClientMessage Server::PopMessage() {
 		return incomingMessages.pop();
 	}
 
-	bool NetworkServer::HasMessages()
+	bool Server::HasMessages()
 	{
 		return !incomingMessages.empty();
 	};

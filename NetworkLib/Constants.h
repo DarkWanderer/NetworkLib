@@ -1,6 +1,2 @@
-#ifndef NETWORKLIB_CONSTANTS
-#define NETWORKLIB_CONSTANTS
-
+#pragma once
 static const int NetworkBufferSize = 4096;
-
-#endif

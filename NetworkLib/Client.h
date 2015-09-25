@@ -1,6 +1,4 @@
-#ifndef NETWORKLIB_NETWORKCLIENT
-#define NETWORKLIB_NETWORKCLIENT
-
+#pragma once
 #include "Constants.h"
 #include "Statistics.h"
 
@@ -10,21 +8,22 @@
 
 #include <array>
 #include <thread>
+#include "IClient.h"
 
 
 using asio::ip::udp;
 
 namespace NetworkLib {
-	class NetworkClient {
+	class Client : public IClient {
 	public:
-		NetworkClient(std::string host, std::string server_port, unsigned short local_port = 0);
-		~NetworkClient();
+		Client(std::string host, unsigned short server_port, unsigned short local_port = 0);
+		virtual ~Client();
 
-		void Send(std::string message);
+		void Send(const std::string& message) override;
 
-		bool HasMessages();;
+		bool HasMessages() override;;
 
-		std::string PopMessage();;
+		std::string PopMessage() override;;
 
 	private:
 		// Network send/receive stuff
@@ -42,10 +41,9 @@ namespace NetworkLib {
 		void handle_receive(const std::error_code& error, std::size_t bytes_transferred);
 		void run_service();
 
-		NetworkClient(NetworkClient&); // block default copy constructor
+		Client(Client&); // block default copy constructor
 
 		// Statistics
 		Statistics statistics;
 	};
 }
-#endif

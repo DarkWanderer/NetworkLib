@@ -1,6 +1,4 @@
-#ifndef NETWORKLIB_NETWORKSERVER
-#define NETWORKLIB_NETWORKSERVER
-
+#pragma once
 #include "Constants.h"
 #include "Statistics.h"
 
@@ -12,21 +10,21 @@
 #include <map>
 #include <thread>
 #include <atomic>
+#include "IServer.h"
 
 using asio::ip::udp;
 
 typedef std::map<uint32_t, udp::endpoint> ClientList;
 typedef ClientList::value_type Client;
-typedef std::pair<std::string, uint32_t> ClientMessage;
 
 namespace NetworkLib {
-	class NetworkServer {
+	class Server : public IServer {
 	public:
-		explicit NetworkServer(unsigned short local_port);
-		~NetworkServer();
+		explicit Server(unsigned short local_port);
+		virtual ~Server();
 
-		bool HasMessages();
-		ClientMessage PopMessage();
+		bool HasMessages() override;
+		ClientMessage PopMessage() override;
 
 		void SendToClient(const std::string& message, uint32_t clientID);
 		void SendToAllExcept(const std::string& message, uint32_t clientID);
@@ -63,10 +61,9 @@ namespace NetworkLib {
 		ClientList clients;
 		std::atomic_int32_t nextClientID;
 
-		NetworkServer(NetworkServer&); // block default copy constructor
+		Server(Server&); // block default copy constructor
 
 		// Statistics
 		Statistics statistics;
 	};
 }
-#endif

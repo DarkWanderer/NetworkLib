@@ -70,16 +70,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="NetworkClient.cpp" />
-    <ClCompile Include="NetworkServer.cpp" />
+    <ClCompile Include="Client.cpp" />
+    <ClCompile Include="Factory.cpp" />
+    <ClCompile Include="Server.cpp" />
     <ClCompile Include="Statistics.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Constants.h" />
+    <ClInclude Include="Factory.h" />
+    <ClInclude Include="IClient.h" />
+    <ClInclude Include="IServer.h" />
     <ClInclude Include="LockedQueue.h" />
     <ClInclude Include="Log.h" />
-    <ClInclude Include="NetworkClient.h" />
-    <ClInclude Include="NetworkServer.h" />
+    <ClInclude Include="Client.h" />
+    <ClInclude Include="Server.h" />
     <ClInclude Include="Statistics.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>

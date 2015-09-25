@@ -1,8 +1,5 @@
+#include "../NetworkLib/Factory.h"
 #include "CppUnitTest.h"
-
-#include "..\NetworkLib\NetworkServer.h"
-#include "..\NetworkLib\NetworkClient.h"
-
 #include <memory>
 #include <thread>
 
@@ -13,24 +10,24 @@ namespace Multiorb_UnitTests
 {
 	TEST_CLASS(NetworkTests)
 	{
-		static std::unique_ptr<NetworkLib::NetworkServer> CreateServer()
+		static std::unique_ptr<NetworkLib::IServer> CreateServer()
 		{
-			return std::make_unique<NetworkLib::NetworkServer>(12345);
+			return NetworkLib::Factory::CreateServer(12345);
 		};
 
-		static std::unique_ptr<NetworkLib::NetworkClient> CreateClient() {
-			return std::make_unique<NetworkLib::NetworkClient>("localhost", "12345", 23456);
+		static std::unique_ptr<NetworkLib::IClient> CreateClient() {
+			return NetworkLib::Factory::CreateClient("localhost", 12345, 23456);
 		};
 
 		const chrono::milliseconds sleepDuration = chrono::milliseconds(5);
 
 	public:
-		TEST_METHOD(NetworkServerConstructorShouldWork)
+		TEST_METHOD(ServerConstructorShouldWork)
 		{
 			auto server = CreateServer();
 		};
 
-		TEST_METHOD(NetworkServerShouldHaveNoMessagesWhenCreated)
+		TEST_METHOD(ServerShouldHaveNoMessagesWhenCreated)
 		{
 			auto server = CreateServer();
 			Assert::IsFalse(server->HasMessages());
