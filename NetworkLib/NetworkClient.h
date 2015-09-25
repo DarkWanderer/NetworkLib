@@ -22,16 +22,9 @@ namespace NetworkLib {
 
 		void Send(std::string message);
 
-		inline bool HasMessages()
-		{
-			return !incomingMessages.empty();
-		};
+		bool HasMessages();;
 
-		inline std::string PopMessage()
-		{
-			if (incomingMessages.empty()) throw std::logic_error("No messages to pop");
-			return incomingMessages.pop();
-		};
+		std::string PopMessage();;
 
 	private:
 		// Network send/receive stuff

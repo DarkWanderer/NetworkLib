@@ -12,5 +12,6 @@
     <ClInclude Include="Log.h" />
     <ClInclude Include="LockedQueue.h" />
     <ClInclude Include="Statistics.h" />
+    <ClInclude Include="targetver.h" />
   </ItemGroup>
 </Project>

@@ -1,3 +1,4 @@
+#include "targetver.h"
 #include "NetworkServer.h"
 #include "Log.h"
 

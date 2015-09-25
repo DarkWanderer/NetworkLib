@@ -1,3 +1,4 @@
+#include "targetver.h"
 #include "NetworkClient.h"
 #include "Log.h"
 
@@ -44,6 +45,18 @@ namespace NetworkLib {
 	{
 		socket.send_to(asio::buffer(message), server_endpoint);
 		statistics.RegisterSentMessage(message.size());
+	}
+
+	bool NetworkClient::HasMessages()
+	{
+		return !incomingMessages.empty();
+	}
+
+	std::string NetworkClient::PopMessage()
+	{
+		if (incomingMessages.empty()) 
+			throw std::logic_error("No messages to pop");
+		return incomingMessages.pop();
 	}
 
 	void NetworkClient::run_service()
